@@ -1,0 +1,15 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "prompt"
+        ],
+        "additionalProperties": false
+    }
+}

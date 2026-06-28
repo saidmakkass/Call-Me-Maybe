@@ -1,0 +1,18 @@
+[project]
+name = "call-me-maybe"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "accelerate>=1.14.0",
+    "argparse>=1.4.0",
+    "flake8>=7.3.0",
+    "jsonschema>=4.26.0",
+    "mypy>=2.1.0",
+    "partial-json-parser>=0.2.1.1.post7",
+    "pydantic>=2.13.4",
+    "rich>=15.0.0",
+    "torch>=2.12.0",
+    "transformers>=5.12.0",
+]
