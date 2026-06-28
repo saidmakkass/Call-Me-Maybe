@@ -4,6 +4,7 @@ from .models import FunctionCall, Output, FunctionRegistry, FunctionDefinition
 from .generator import generate_function_name, generate_function_parameters
 from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, update_function_call
 from time import perf_counter
+from rich.status import Status
 
 def get_function(
     function_registry: FunctionRegistry, name: str
@@ -27,6 +28,8 @@ def main():
     print_prompts([p.prompt for p in prompts])
     print_spacer()
     start_time = perf_counter()
+    status = Status("Generating...")
+    status.start()
     for i, p in enumerate(prompts, start=1):
         function_call = FunctionCall(
             prompt=p.prompt, name="", parameters={}
@@ -57,6 +60,7 @@ def main():
             f.write(output.dump())
         live.stop()
         print_spacer(start_time=start_time)
+    status.stop()
 
     print_summary(start_time, len(function_registry.functions), len(prompts))
 
