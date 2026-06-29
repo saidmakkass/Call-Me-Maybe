@@ -21,6 +21,7 @@ def main():
     if not function_names:
         raise NotImplementedError("empty registry")
     function_registry_dump = function_registry.model_dump_json()
+    print("\033[2J\033[H\033[3J", end="")
     print_title()
     print_spacer()
     print_function_registry(function_registry)
