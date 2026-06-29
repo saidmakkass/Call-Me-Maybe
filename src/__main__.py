@@ -2,8 +2,9 @@ from .parser import parse
 from .llm import Model
 from .models import FunctionCall, Output, FunctionRegistry, FunctionDefinition
 from .generator import generate_function_name, generate_function_parameters
-from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, print_exit
+from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, print_exit, print_error
 from time import perf_counter
+from pydantic import ValidationError
 
 def get_function(
     function_registry: FunctionRegistry, name: str
@@ -13,10 +14,19 @@ def get_function(
             return f
 
 def main():
+    function_registry, prompts, output_path, model_name , debug= parse()
+    if debug:
+        from .ui import log
+    else:
+        from .ui import no_log as log
     output = Output(output=[])
-    function_registry, prompts, output_path = parse()
     function_names = function_registry.names
-    model = Model()
+    try:
+        model = Model(model_name=model_name)
+    except OSError:
+        print_error(f"Invalid Identifier of HF Hub model: '{model_name}'")
+    except ValidationError:
+        print_error(f"Model unsuported by llm_sdk: '{model_name}'")
     function_registry_dump = function_registry.model_dump_json()
     print("\033[2J\033[H\033[3J", end="")
     print_title()
@@ -41,18 +51,24 @@ def main():
             f'"prompt": "{p.prompt}",'
             '"name": "'
         )
+        log("Generating function name")
         generate_function_name(
             model, context, function_names, live, function_call
         )
+        log("Done generating function name")
         context += (
             f'{function_call.name}",' '"parameters": {'
         )
+        log("Generating function parameters")
         generate_function_parameters(
             model, context, get_function(function_registry, function_call.name), live, function_call
         )
+        log("Done generating function parameters")
         output.add(function_call)
+        log("Writing function call to output file")
         with open(output_path, "w") as f:
             f.write(output.dump())
+        log("Done writing function call to output file")
         live.stop()
         status.stop()
         print_spacer(start_time=prompt_start_time)

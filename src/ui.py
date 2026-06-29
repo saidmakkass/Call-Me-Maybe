@@ -37,6 +37,11 @@ print = console.print
 status = Status("Generating...", console=console)
 
 
+def log(message: str) -> None:
+    console.log(message)
+
+def no_log(message: str) -> None:
+    return
 
 def print_title() -> None:
     title = Text(
@@ -206,21 +211,16 @@ def print_exit() -> None:
     console.clear()
     print()
     text = Text(
-        "Keyboard interrupt detected.",
-        style="bright_yellow",
-        justify="center"
+        "Keyboard interrupt detected.", style="bright_yellow", justify="center"
     )
-    sub_text = Text(
-        "See you next time.",
-        justify="center"
-    )
+    sub_text = Text("See you next time.", justify="center")
     pannel = Panel(
-            Group(text, sub_text),
-            padding=(2, 4),
-            title="Interrupted",
-            border_style="bright_red",
-            title_align="left",
-            subtitle="Ctrl + c",
-            subtitle_align="right"
-        )
+        Group(text, sub_text),
+        padding=(2, 4),
+        title="Interrupted",
+        border_style="bright_red",
+        title_align="left",
+        subtitle="Ctrl + c",
+        subtitle_align="right",
+    )
     print(pannel)

@@ -80,16 +80,19 @@ def generate_parameter_float(
             token_str = model.decode(token)
             if "," in token_str and token_str != ",":
                 logits[token] = float("-inf")
-            if token_str == "," and not is_float(number):
+            if "}" in token_str and token_str != "}":
+                logits[token] = float("-inf")
+            if (token_str == "," or token_str == "}") and not is_float(number):
                 logits[token] = float("-inf")
             if (
                 token_str != ","
+                and token_str != "}"
                 and "." not in token_str
                 and not is_float(number + token_str)
             ):
                 logits[token] = float("-inf")
         next_token = model.decode(model.next_token(logits))
-        if next_token == ",":
+        if next_token == "," or next_token == "}":
             break
         number += next_token
         function_call.parameters[param] = float(number)
@@ -110,12 +113,18 @@ def generate_parameter_int(
             token_str = model.decode(token)
             if "," in token_str and token_str != ",":
                 logits[token] = float("-inf")
-            if token_str == "," and not number.isdigit():
+            if "}" in token_str and token_str != "}":
                 logits[token] = float("-inf")
-            if token_str != "," and not (number + token_str).isdigit():
+            if (token_str == "," or token_str == "}") and not number.isdigit():
+                logits[token] = float("-inf")
+            if (
+                token_str != ","
+                and token_str != "}"
+                and not (number + token_str).isdigit()
+            ):
                 logits[token] = float("-inf")
         next_token = model.decode(model.next_token(logits))
-        if next_token == ",":
+        if next_token == "," or token_str == "}":
             break
         number += next_token
         function_call.parameters[param] = int(number)

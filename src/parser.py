@@ -32,6 +32,17 @@ def _get_args():
         help="Path to output file",
         metavar="<output_file>",
     )
+    parser.add_argument(
+        "--model",
+        default="Qwen/Qwen3-0.6B",
+        help="Identifier of the model on the HF Hub.",
+        metavar="<model_identifier>"
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug mode"
+    )
     return parser.parse_args().__dict__
 
 
@@ -96,6 +107,8 @@ def parse():
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w") as f:
             ...
+        model = args["model"]
+        debug = args["debug"]
     except FileNotFoundError as e:
         print_error(f"Missing input file: '{e.filename}'")
     except NotADirectoryError as e:
@@ -110,4 +123,4 @@ def parse():
         print_error(f"{e}")
     except ValueError as e:
         print_error(f"{e}")
-    return (function_registry, prompts, output_path)
+    return (function_registry, prompts, output_path, model, debug)
