@@ -1,3 +1,8 @@
+"""Terminal UI components for displaying progress and results.
+
+Provides rich console output for displaying function registries, prompts,
+live function call generation, execution summaries, and error messages.
+"""
 from time import perf_counter, sleep
 import json
 
@@ -14,6 +19,14 @@ from .models import FunctionRegistry, FunctionCall
 
 
 def format_duration(seconds: float) -> str:
+    """Format seconds into a human-readable duration string.
+
+    Args:
+        seconds: Duration in seconds.
+
+    Returns:
+        Formatted string (e.g., '1m 30s', '2h 15m 45s').
+    """
     seconds = int(seconds)
 
     if seconds < 60:
@@ -38,12 +51,25 @@ status = Status("Generating...", console=console)
 
 
 def log(message: str) -> None:
+    """Log a debug message to the console.
+
+    Args:
+        message: Debug message to log.
+    """
     console.log(message)
 
+
 def no_log(message: str) -> None:
+    """No-op log function for disabling debug output.
+
+    Args:
+        message: Message to ignore.
+    """
     return
 
+
 def print_title() -> None:
+    """Print the application title banner."""
     title = Text(
         "\n☎  Call Me Maybe  ☎\n",
         justify="center",
@@ -64,6 +90,11 @@ def print_title() -> None:
 
 
 def print_function_registry(function_registry: FunctionRegistry) -> None:
+    """Display the function registry as a formatted table.
+
+    Args:
+        function_registry: Registry containing function definitions to display.
+    """
     table = Table(
         expand=True, row_styles=["", "dim"], header_style=f"{ACCENT} bold"
     )
@@ -93,6 +124,11 @@ def print_function_registry(function_registry: FunctionRegistry) -> None:
 
 
 def print_prompts(prompts: list[str]) -> None:
+    """Display all prompts in a formatted panel.
+
+    Args:
+        prompts: List of prompt strings to display.
+    """
     colors = [
         "bright_white",
         ACCENT,
@@ -120,6 +156,12 @@ def print_prompts(prompts: list[str]) -> None:
 def print_spacer(
     start_time: float | None = None, title: str | None = None
 ) -> None:
+    """Print a visual separator line with optional elapsed time or title.
+
+    Args:
+        start_time: Optional start time to calculate and display elapsed duration.
+        title: Optional title to display in the separator.
+    """
     if start_time is None:
         rule = Rule(title, style=ACCENT)
     else:
@@ -138,6 +180,17 @@ def print_spacer(
 def print_function_call(
     i: int, n: int, prompt: str, function_call: FunctionCall
 ) -> Live:
+    """Display a prompt and start live updating of the function call output.
+
+    Args:
+        i: Current prompt index (1-based).
+        n: Total number of prompts.
+        prompt: User prompt text to display.
+        function_call: FunctionCall object to display and update.
+
+    Returns:
+        Tuple of (Live, Status) objects for updating the display.
+    """
     panel = Panel(
         prompt,
         title=f"[{ACCENT}]Prompt {i}/{n}:[/]",
@@ -167,6 +220,12 @@ def print_function_call(
 
 
 def update_function_call(live: Live, function_call: FunctionCall) -> None:
+    """Update the live display with the current function call state.
+
+    Args:
+        live: Live display object to update.
+        function_call: Current FunctionCall object to display.
+    """
     syntax = Syntax(
         json.dumps(function_call.model_dump(), indent=4),
         "json",
@@ -181,6 +240,13 @@ def update_function_call(live: Live, function_call: FunctionCall) -> None:
 
 
 def print_summary(start_time: float, n_functions: int, n_prompts: int) -> None:
+    """Display execution summary with timing and statistics.
+
+    Args:
+        start_time: Start time for calculating total elapsed duration.
+        n_functions: Number of available functions.
+        n_prompts: Number of processed prompts.
+    """
     table = Table(row_styles=["", "dim"], header_style=f"{ACCENT} bold")
     table.add_column("Metric")
     table.add_column("Value")
@@ -195,6 +261,11 @@ def print_summary(start_time: float, n_functions: int, n_prompts: int) -> None:
 
 
 def print_error(message: str) -> None:
+    """Display an error message and exit the application.
+
+    Args:
+        message: Error message to display.
+    """
     panel = Panel(
         message,
         title="Error:",
@@ -206,6 +277,7 @@ def print_error(message: str) -> None:
 
 
 def print_exit() -> None:
+    """Display keyboard interrupt message and cleanup."""
     status.stop()
     console.clear_live()
     console.clear()

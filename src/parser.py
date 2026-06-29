@@ -8,6 +8,11 @@ from .ui import print_error
 
 
 def _get_args():
+    """Parse and return command-line arguments.
+    
+    Returns:
+        Dictionary containing parsed arguments (functions_definition, input, output, model, debug).
+    """
     parser = ArgumentParser(
         prog="uv run python -m src",
         description="Transform Natural Language to Function Calls",
@@ -47,6 +52,17 @@ def _get_args():
 
 
 def _load_json(path: str):
+    """Load and parse a JSON file.
+    
+    Args:
+        path: Path to the JSON file.
+        
+    Returns:
+        Parsed JSON data as a list.
+        
+    Raises:
+        ValueError: If the JSON is invalid or malformed.
+    """
     try:
         with open(path, "r") as f:
             return list(json.load(f))
@@ -57,6 +73,17 @@ def _load_json(path: str):
 
 
 def _load_function_registry(path: str):
+    """Load and validate a function registry from JSON file.
+    
+    Args:
+        path: Path to the functions definition JSON file.
+        
+    Returns:
+        FunctionRegistry object with validated function definitions.
+        
+    Raises:
+        ValueError: If JSON is invalid or doesn't match schema.
+    """
     json_file = _load_json(path)
     schema_dir = files(__package__) / "schemas"
     with open(schema_dir.joinpath("functions_definition_schema.json")) as f:
@@ -72,6 +99,17 @@ def _load_function_registry(path: str):
 
 
 def _load_prompts(path: str):
+    """Load and validate prompts from JSON file.
+    
+    Args:
+        path: Path to the prompts JSON file.
+        
+    Returns:
+        List of Prompt objects with validated data.
+        
+    Raises:
+        ValueError: If JSON is invalid or doesn't match schema.
+    """
     json_file = _load_json(path)
     schema_dir = files(__package__) / "schemas"
     with open(schema_dir.joinpath("input_schema.json")) as f:
@@ -87,6 +125,14 @@ def _load_prompts(path: str):
 
 
 def parse():
+    """Parse configuration from arguments and load all required data.
+    
+    Loads function definitions, prompts, and model configuration from files
+    and validates them. Handles all file I/O errors gracefully.
+    
+    Returns:
+        Tuple of (function_registry, prompts, output_path, model_name, debug).
+    """
     args = _get_args()
     try:
         function_registry = _load_function_registry(

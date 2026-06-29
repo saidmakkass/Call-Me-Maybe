@@ -12,6 +12,18 @@ def generate_function_name(
     live: Live,
     function_call: FunctionCall,
 ) -> None:
+    """Generate a valid function name token-by-token using the model.
+
+    Uses constrained decoding to ensure only valid function names are generated,
+    by filtering logits to exclude tokens that don't lead to valid function names.
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        function_names: List of available function names for validation.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to update with generated name.
+    """
     found_valid_name = False
 
     while True:
@@ -46,6 +58,18 @@ def generate_parameter_str(
     function_call: FunctionCall,
     param: str,
 ) -> None:
+    """Generate a string parameter value token-by-token.
+
+    Continues generating tokens until a closing quote is encountered,
+    updating the function call and UI in real-time.
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to update with parameter value.
+        param: The parameter name to generate for.
+    """
     function_call.parameters[param] = ""
     while True:
         logits = model.get_logits(
@@ -56,9 +80,18 @@ def generate_parameter_str(
             break
         function_call.parameters[param] += next_token
         update_function_call(live, function_call)
+    function_call.parameters[param] = function_call.parameters[param].strip()
 
 
 def is_float(s: str) -> bool:
+    """Check if a string can be converted to a float.
+
+    Args:
+        s: String to validate.
+
+    Returns:
+        True if the string represents a valid float, False otherwise.
+    """
     try:
         float(s)
         return True
@@ -73,6 +106,18 @@ def generate_parameter_float(
     function_call: FunctionCall,
     param: str,
 ) -> None:
+    """Generate a float parameter value with constrained token decoding.
+
+    Filters logits to ensure valid float syntax (digits, decimal point, signs)
+    and stops at delimiters (comma or closing brace).
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to update with parameter value.
+        param: The parameter name to generate for.
+    """
     number = ""
     while True:
         logits = model.get_logits(model.encode(context + number))
@@ -106,6 +151,18 @@ def generate_parameter_int(
     function_call: FunctionCall,
     param: str,
 ) -> None:
+    """Generate an integer parameter value with constrained token decoding.
+
+    Filters logits to ensure only digits are generated and stops at
+    delimiters (comma or closing brace).
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to update with parameter value.
+        param: The parameter name to generate for.
+    """
     number = ""
     while True:
         logits = model.get_logits(model.encode(context + number))
@@ -138,6 +195,18 @@ def generate_function_parameters(
     live: Live,
     function_call: FunctionCall,
 ) -> None:
+    """Generate all parameters for a function based on its definition.
+
+    Iterates through each parameter and calls the appropriate generator
+    based on the parameter type (string, integer, float, or boolean).
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        function_definition: Definition of the function including parameters.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to populate with parameters.
+    """
     for parameter, type in function_definition.parameters.items():
         context += f'"{parameter}": '
         match type.type:

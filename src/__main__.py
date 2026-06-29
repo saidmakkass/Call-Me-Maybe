@@ -9,11 +9,28 @@ from pydantic import ValidationError
 def get_function(
     function_registry: FunctionRegistry, name: str
 ) -> FunctionDefinition:
+    """Retrieve a function definition by name from the registry.
+    
+    Args:
+        function_registry: The registry containing available functions.
+        name: The name of the function to retrieve.
+        
+    Returns:
+        The FunctionDefinition matching the provided name.
+    """
     for f in function_registry.functions:
         if f.name == name:
             return f
 
 def main():
+    """Main entry point for the function calling application.
+    
+    Orchestrates the NL-to-function-call conversion process by:
+    - Parsing command-line arguments and loading configuration
+    - Initializing the language model
+    - Processing each prompt and generating appropriate function calls
+    - Writing results to the output file
+    """
     function_registry, prompts, output_path, model_name , debug= parse()
     if debug:
         from .ui import log
