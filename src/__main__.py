@@ -27,6 +27,8 @@ def main():
         print_error(f"Invalid Identifier of HF Hub model: '{model_name}'")
     except ValidationError:
         print_error(f"Model unsuported by llm_sdk: '{model_name}'")
+    except RuntimeError:
+        print_error(f"Unable to run model: '{model_name}'")
     function_registry_dump = function_registry.model_dump_json()
     print("\033[2J\033[H\033[3J", end="")
     print_title()
