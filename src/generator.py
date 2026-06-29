@@ -96,21 +96,30 @@ def generate_parameter_float(
         update_function_call(live, function_call)
 
 
-def generate_parameter_int(model: Model, context: str) -> int:
+def generate_parameter_int(
+    model: Model,
+    context: str,
+    live: Live,
+    function_call: FunctionCall,
+    param: str,
+) -> None:
     number = ""
     while True:
         logits = model.get_logits(model.encode(context + number))
         for token, _ in enumerate(logits):
             token_str = model.decode(token)
-            if not token_str.isdigit() and not (
-                token_str == "," and len(number)
-            ):
+            if "," in token_str and token_str != ",":
+                logits[token] = float("-inf")
+            if token_str == "," and not number.isdigit():
+                logits[token] = float("-inf")
+            if token_str != "," and not (number + token_str).isdigit():
                 logits[token] = float("-inf")
         next_token = model.decode(model.next_token(logits))
-        if token_str == ",":
+        if next_token == ",":
             break
         number += next_token
-    return int(number)
+        function_call.parameters[param] = int(number)
+        update_function_call(live, function_call)
 
 
 def generate_function_parameters(
@@ -138,7 +147,9 @@ def generate_function_parameters(
                     model, context, live, function_call, parameter
                 )
                 context += f"{function_call.parameters[parameter]},"
-            # case "integer":
-            #     function_call.parameters[parameter] = generate_parameter_int()
+            case "integer":
+                function_call.parameters[parameter] = generate_parameter_int(
+                    model, context, live, function_call, parameter
+                )
             # case "boolean":
             #     function_call.parameters[parameter] = generate_parameter_bool()
