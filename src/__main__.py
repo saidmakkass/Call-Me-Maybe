@@ -17,8 +17,6 @@ def main():
     function_registry, prompts, output_path = parse()
     function_names = function_registry.names
     model = Model()
-    if not function_names:
-        raise NotImplementedError("empty registry")
     function_registry_dump = function_registry.model_dump_json()
     print("\033[2J\033[H\033[3J", end="")
     print_title()

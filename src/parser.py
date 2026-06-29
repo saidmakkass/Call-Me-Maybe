@@ -56,7 +56,7 @@ def _load_function_registry(path: str):
             schema=schema,
         )
     except jsonschema.ValidationError as e:
-        raise ValueError(f"Error: Invalid config file: {path}")
+        raise ValueError(f"Error: Invalid config file: {path} - {e.message}")
     return FunctionRegistry(functions=json_file)
 
 
@@ -71,7 +71,7 @@ def _load_prompts(path: str):
             schema=schema,
         )
     except jsonschema.ValidationError as e:
-        raise ValueError(f"Error: Invalid config file: {path} ({e.message})")
+        raise ValueError(f"Error: Invalid config file: {path} - {e.message}")
     return [Prompt(**p) for p in json_file]
 
 
@@ -81,7 +81,17 @@ def parse():
         function_registry = _load_function_registry(
             args["functions_definition"]
         )
+        if not function_registry.names:
+            raise ValueError(f"Invalid config file: '{args['input']}' - No functions provided")
+        if any(not f.name for f in function_registry.functions):
+            raise ValueError(f"Invalid config file: '{args['input']}' - Functions can't have empty names")
+        if len(set(function_registry.names)) != len(function_registry.names):
+            raise ValueError(f"Invalid config file: '{args['input']}' - Duplicated function names")
         prompts = _load_prompts(args["input"])
+        if any(not p.prompt for p in prompts):
+            raise ValueError(f"Invalid config file: '{args['input']}' - Prompt cant be an empty string")
+        if not prompts:
+            raise ValueError(f"Invalid config file: '{args['input']}' - No prompts provided")
         output_path = Path(args["output"])
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w") as f:
