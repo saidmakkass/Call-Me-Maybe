@@ -2,9 +2,8 @@ from .parser import parse
 from .llm import Model
 from .models import FunctionCall, Output, FunctionRegistry, FunctionDefinition
 from .generator import generate_function_name, generate_function_parameters
-from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, update_function_call
+from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, print_exit
 from time import perf_counter
-from rich.status import Status
 
 def get_function(
     function_registry: FunctionRegistry, name: str
@@ -29,14 +28,12 @@ def main():
     print_prompts([p.prompt for p in prompts])
     print_spacer()
     start_time = perf_counter()
-    status = Status("Generating...")
-    status.start()
     for i, p in enumerate(prompts, start=1):
         prompt_start_time = perf_counter()
         function_call = FunctionCall(
             prompt=p.prompt, name="", parameters={}
         )
-        live = print_function_call(i, len(prompts), p.prompt, function_call)
+        live, status = print_function_call(i, len(prompts), p.prompt, function_call)
         context = (
             "You are a natural language to function call system.\n"
             "Given this function registry:\n"
@@ -59,11 +56,15 @@ def main():
         with open(output_path, "w") as f:
             f.write(output.dump())
         live.stop()
+        status.stop()
         print_spacer(start_time=prompt_start_time)
-    status.stop()
 
     print_summary(start_time, len(function_registry.functions), len(prompts))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print_exit()
+        exit()

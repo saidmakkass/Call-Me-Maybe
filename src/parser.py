@@ -2,9 +2,9 @@ import json
 import jsonschema
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict
 from importlib.resources import files
 from .models import Prompt, FunctionRegistry
+from .ui import print_error
 
 
 def _get_args():
@@ -84,15 +84,20 @@ def parse():
         prompts = _load_prompts(args["input"])
         output_path = Path(args["output"])
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w") as f: ...
-    except (
-        ValueError,
-        FileNotFoundError,
-        NotADirectoryError,
-        IsADirectoryError,
-        PermissionError,
-        OSError,
-    ) as e:
-        print(e)
-        exit()
+        with output_path.open("w") as f:
+            ...
+    except FileNotFoundError as e:
+        print_error(f"Missing input file: '{e.filename}'")
+    except NotADirectoryError as e:
+        print_error(f"Not a directory: '{e.filename}'")
+    except IsADirectoryError as e:
+        print_error(f"Is a directory: '{e.filename}'")
+    except PermissionError as e:
+        print_error(f"Insufficient permissions: '{e.filename}'")
+    except FileExistsError as e:
+        print_error(f"File exists: '{e.filename}'")
+    except OSError as e:
+        print_error(f"{e}")
+    except ValueError as e:
+        print_error(f"{e}")
     return (function_registry, prompts, output_path)

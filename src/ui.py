@@ -1,16 +1,17 @@
-from time import perf_counter
+from time import perf_counter, sleep
 import json
 
-from rich.console import Group
+from rich.console import Group, Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.syntax import Syntax
 from rich.rule import Rule
 from rich.text import Text
 from rich.live import Live
-from rich import print
+from rich.status import Status
 
 from .models import FunctionRegistry, FunctionCall
+
 
 def format_duration(seconds: float) -> str:
     seconds = int(seconds)
@@ -26,9 +27,15 @@ def format_duration(seconds: float) -> str:
     hours, minutes = divmod(minutes, 60)
     return f"{hours}h {minutes:02d}m {sec:02d}s"
 
+
 BORDER_COLOR = "bright_magenta"
 TITLE_STYLE = "bold bright_white"
 ACCENT = "bright_yellow"
+
+console = Console()
+print = console.print
+status = Status("Generating...", console=console)
+
 
 
 def print_title() -> None:
@@ -113,7 +120,9 @@ def print_spacer(
     else:
         elapsed = perf_counter() - start_time
         rule = Rule(
-            f"[bold cyan]{format_duration(elapsed)}[/]", align="right", style=ACCENT
+            f"[bold cyan]{format_duration(elapsed)}[/]",
+            align="right",
+            style=ACCENT,
         )
 
     print()
@@ -144,10 +153,12 @@ def print_function_call(
             border_style=BORDER_COLOR,
             title="Json:",
             title_align="left",
-        )
+        ),
+        console=console,
     )
+    status.start()
     live.start()
-    return live
+    return live, status
 
 
 def update_function_call(live: Live, function_call: FunctionCall) -> None:
@@ -176,3 +187,40 @@ def print_summary(start_time: float, n_functions: int, n_prompts: int) -> None:
     table.add_row("Prompts", f"{n_prompts}", style="green bold")
 
     print(Panel.fit(table, title="Summary", border_style=BORDER_COLOR))
+
+
+def print_error(message: str) -> None:
+    panel = Panel(
+        message,
+        title="Error:",
+        title_align="left",
+        border_style="red",
+    )
+    print(panel)
+    exit(1)
+
+
+def print_exit() -> None:
+    status.stop()
+    console.clear_live()
+    console.clear()
+    print()
+    text = Text(
+        "Keyboard interrupt detected.",
+        style="bright_yellow",
+        justify="center"
+    )
+    sub_text = Text(
+        "See you next time.",
+        justify="center"
+    )
+    pannel = Panel(
+            Group(text, sub_text),
+            padding=(2, 4),
+            title="Interrupted",
+            border_style="bright_red",
+            title_align="left",
+            subtitle="Ctrl + c",
+            subtitle_align="right"
+        )
+    print(pannel)
