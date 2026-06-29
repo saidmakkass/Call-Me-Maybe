@@ -1,19 +1,4 @@
 [
-    {
-    "name": "fn_add",
-    "description": "Concatinate two strings and return the concatinated string",
-    "parameters": {
-      "a": {
-        "type": "string"
-      },
-      "b": {
-        "type": "string"
-      }
-    },
-    "returns": {
-      "type": "string"
-    }
-  },
   {
     "name": "fn_add_numbers",
     "description": "Add two numbers together and return their sum.",
