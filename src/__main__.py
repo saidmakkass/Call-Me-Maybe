@@ -31,6 +31,7 @@ def main():
     status = Status("Generating...")
     status.start()
     for i, p in enumerate(prompts, start=1):
+        prompt_start_time = perf_counter()
         function_call = FunctionCall(
             prompt=p.prompt, name="", parameters={}
         )
@@ -44,22 +45,20 @@ def main():
             f'"prompt": "{p.prompt}",'
             '"name": "'
         )
-        chosen_function = generate_function_name(
-            model, context, function_names
+        generate_function_name(
+            model, context, function_names, live, function_call
         )
-        function_call.name = chosen_function
-        update_function_call(live, function_call)
-        context += f'{chosen_function}",' '"parameters": {'
-        parameters = generate_function_parameters(
-            model, context, get_function(function_registry, chosen_function)
+        context += (
+            f'{function_call.name}",' '"parameters": {'
         )
-        function_call.parameters = parameters
-        update_function_call(live, function_call)
+        generate_function_parameters(
+            model, context, get_function(function_registry, function_call.name), live, function_call
+        )
         output.add(function_call)
         with open(output_path, "w") as f:
             f.write(output.dump())
         live.stop()
-        print_spacer(start_time=start_time)
+        print_spacer(start_time=prompt_start_time)
     status.stop()
 
     print_summary(start_time, len(function_registry.functions), len(prompts))
