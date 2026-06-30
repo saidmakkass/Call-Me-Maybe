@@ -81,6 +81,7 @@ def generate_parameter_str(
         function_call.parameters[param] += next_token
         update_function_call(live, function_call)
     function_call.parameters[param] = function_call.parameters[param].strip()
+    update_function_call(live, function_call)
 
 
 def is_float(s: str) -> bool:
@@ -188,6 +189,46 @@ def generate_parameter_int(
         update_function_call(live, function_call)
 
 
+def generate_parameter_bool(
+    model: Model,
+    context: str,
+    live: Live,
+    function_call: FunctionCall,
+    param: str,
+) -> None:
+    """Generate a boolean parameter value with constrained token decoding.
+
+    Filters logits to ensure only true or false are generated and stops once
+    one of the two is generated.
+
+    Args:
+        model: The language model instance.
+        context: The context string to generate from.
+        live: Live display object for updating UI.
+        function_call: FunctionCall object to update with parameter value.
+        param: The parameter name to generate for.
+    """
+    output = ""
+    result = bool()
+    while True:
+        logits = model.get_logits(model.encode(context + output))
+        for token, _ in enumerate(logits):
+            token_str = model.decode(token)
+            if all(
+                not s.startswith(output + token_str) for s in ("true", "false")
+            ):
+                logits[token] = float("-inf")
+        next_token = model.decode(model.next_token(logits))
+        if "true" in (output + next_token).lower():
+            result = True
+            break
+        if "false" in (output + next_token).lower():
+            result = False
+            break
+    function_call.parameters[param] = result
+    update_function_call(live, function_call)
+
+
 def generate_function_parameters(
     model: Model,
     context: str,
@@ -209,18 +250,16 @@ def generate_function_parameters(
     """
     for parameter, type in function_definition.parameters.items():
         context += f'"{parameter}": '
+        function_call.parameters[parameter] = None
+        update_function_call(live, function_call)
         match type.type:
             case "string":
                 context += '"'
-                function_call.parameters[parameter] = None
-                update_function_call(live, function_call)
                 generate_parameter_str(
                     model, context, live, function_call, parameter
                 )
                 context += f'{function_call.parameters[parameter]}",'
             case "number":
-                function_call.parameters[parameter] = None
-                update_function_call(live, function_call)
                 generate_parameter_float(
                     model, context, live, function_call, parameter
                 )
@@ -229,5 +268,7 @@ def generate_function_parameters(
                 function_call.parameters[parameter] = generate_parameter_int(
                     model, context, live, function_call, parameter
                 )
-            # case "boolean":
-            #     function_call.parameters[parameter] = generate_parameter_bool()
+            case "boolean":
+                function_call.parameters[parameter] = generate_parameter_bool(
+                    model, context, live, function_call, parameter
+                )

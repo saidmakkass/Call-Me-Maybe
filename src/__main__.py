@@ -2,19 +2,29 @@ from .parser import parse
 from .llm import Model
 from .models import FunctionCall, Output, FunctionRegistry, FunctionDefinition
 from .generator import generate_function_name, generate_function_parameters
-from .ui import print_title, print_function_registry, print_prompts, print_function_call, print_spacer, print_summary, print_exit, print_error
+from .ui import (
+    print_title,
+    print_function_registry,
+    print_prompts,
+    print_function_call,
+    print_spacer,
+    print_summary,
+    print_exit,
+    print_error,
+)
 from time import perf_counter
 from pydantic import ValidationError
+
 
 def get_function(
     function_registry: FunctionRegistry, name: str
 ) -> FunctionDefinition:
     """Retrieve a function definition by name from the registry.
-    
+
     Args:
         function_registry: The registry containing available functions.
         name: The name of the function to retrieve.
-        
+
     Returns:
         The FunctionDefinition matching the provided name.
     """
@@ -22,16 +32,17 @@ def get_function(
         if f.name == name:
             return f
 
+
 def main():
     """Main entry point for the function calling application.
-    
+
     Orchestrates the NL-to-function-call conversion process by:
     - Parsing command-line arguments and loading configuration
     - Initializing the language model
     - Processing each prompt and generating appropriate function calls
     - Writing results to the output file
     """
-    function_registry, prompts, output_path, model_name , debug= parse()
+    function_registry, prompts, output_path, model_name, debug = parse()
     if debug:
         from .ui import log
     else:
@@ -57,10 +68,10 @@ def main():
     start_time = perf_counter()
     for i, p in enumerate(prompts, start=1):
         prompt_start_time = perf_counter()
-        function_call = FunctionCall(
-            prompt=p.prompt, name="", parameters={}
+        function_call = FunctionCall(prompt=p.prompt, name="", parameters={})
+        live, status = print_function_call(
+            i, len(prompts), p.prompt, function_call
         )
-        live, status = print_function_call(i, len(prompts), p.prompt, function_call)
         context = (
             "You are a natural language to function call system.\n"
             "Given this function registry:\n"
@@ -75,12 +86,14 @@ def main():
             model, context, function_names, live, function_call
         )
         log("Done generating function name")
-        context += (
-            f'{function_call.name}",' '"parameters": {'
-        )
+        context += f'{function_call.name}",' '"parameters": {'
         log("Generating function parameters")
         generate_function_parameters(
-            model, context, get_function(function_registry, function_call.name), live, function_call
+            model,
+            context,
+            get_function(function_registry, function_call.name),
+            live,
+            function_call,
         )
         log("Done generating function parameters")
         output.add(function_call)
