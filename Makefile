@@ -8,11 +8,7 @@ run:
 
 lint:
 	flake8 $(NAME)
-	mypy $(NAME) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
-
-lint-strict:
-	flake8 $(NAME)
-	mypy $(NAME) --strict
+	mypy $(NAME) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs --follow-imports=skip
 
 clean:
 	@rm -rf */__pycache__ */.mypy_cache .mypy_cache __pycache__

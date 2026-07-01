@@ -86,7 +86,7 @@ def _load_function_registry(path: str) -> FunctionRegistry:
     """
     json_data = _load_json(path)
     try:
-        function_registry = FunctionRegistry.model_validate(
+        function_registry: FunctionRegistry = FunctionRegistry.model_validate(
             {"functions": json_data}
         )
     except ValidationError as e:
