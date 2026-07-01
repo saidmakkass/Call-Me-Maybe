@@ -56,8 +56,7 @@ def log(message: str) -> None:
     Args:
         message: Debug message to log.
     """
-    console.log(message)
-
+    console.log(message, _stack_offset=2)
 
 def no_log(message: str) -> None:
     """No-op log function for disabling debug output.
