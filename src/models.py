@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Literal
+from typing import Dict, List, Any, Literal
 from pydantic import BaseModel, ConfigDict
 import json
 
@@ -74,7 +74,7 @@ class FunctionCall(BaseModel):
     model_config = ConfigDict(extra="forbid")
     prompt: str
     name: str
-    parameters: Dict[str, Union[str, int, float, bool]]
+    parameters: Dict[str, Any]
 
 
 class Output(BaseModel):

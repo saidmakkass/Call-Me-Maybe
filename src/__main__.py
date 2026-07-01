@@ -30,10 +30,11 @@ def get_function(
     """
     for f in function_registry.functions:
         if f.name == name:
-            return f
+            function = f
+    return function
 
 
-def main():
+def main() -> None:
     """Main entry point for the function calling application.
 
     Orchestrates the NL-to-function-call conversion process by:
@@ -76,7 +77,8 @@ def main():
             "You are a natural language to function call system.\n"
             "Given this function registry:\n"
             f"{function_registry_dump}\n"
-            "Chose the appropriate function and its parameters based on the user input.\n"
+            "Chose the appropriate function "
+            "and its parameters based on the user input.\n"
             "{"
             f'"prompt": "{p.prompt}",'
             '"name": "'

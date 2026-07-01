@@ -14,8 +14,8 @@ def generate_function_name(
 ) -> None:
     """Generate a valid function name token-by-token using the model.
 
-    Uses constrained decoding to ensure only valid function names are generated,
-    by filtering logits to exclude tokens that don't lead to valid function names.
+    Uses constrained decoding to ensure valid function names are generated,
+    by filtering logits to exclude tokens that don't make valid function names.
 
     Args:
         model: The language model instance.
@@ -30,7 +30,7 @@ def generate_function_name(
         logits = model.get_logits(model.encode(context + function_call.name))
 
         for token, _ in enumerate(logits):
-            token_str = model.decode(token)
+            token_str = model.decode([token])
             if all(
                 not s.startswith(function_call.name + token_str)
                 for s in function_names
@@ -39,7 +39,7 @@ def generate_function_name(
                     continue
                 logits[token] = float("-inf")
 
-        next_token = model.decode(model.next_token(logits))
+        next_token = model.decode([model.next_token(logits)])
 
         if next_token == '"' and found_valid_name:
             break
@@ -75,7 +75,7 @@ def generate_parameter_str(
         logits = model.get_logits(
             model.encode(context + function_call.parameters[param])
         )
-        next_token = model.decode(model.next_token(logits))
+        next_token = model.decode([model.next_token(logits)])
         if '"' in next_token:
             break
         function_call.parameters[param] += next_token
@@ -123,7 +123,7 @@ def generate_parameter_float(
     while True:
         logits = model.get_logits(model.encode(context + number))
         for token, _ in enumerate(logits):
-            token_str = model.decode(token)
+            token_str = model.decode([token])
             if "," in token_str and token_str != ",":
                 logits[token] = float("-inf")
             if "}" in token_str and token_str != "}":
@@ -137,7 +137,7 @@ def generate_parameter_float(
                 and not is_float(number + token_str)
             ):
                 logits[token] = float("-inf")
-        next_token = model.decode(model.next_token(logits))
+        next_token = model.decode([model.next_token(logits)])
         if next_token == "," or next_token == "}":
             break
         number += next_token
@@ -168,7 +168,7 @@ def generate_parameter_int(
     while True:
         logits = model.get_logits(model.encode(context + number))
         for token, _ in enumerate(logits):
-            token_str = model.decode(token)
+            token_str = model.decode([token])
             if "," in token_str and token_str != ",":
                 logits[token] = float("-inf")
             if "}" in token_str and token_str != "}":
@@ -181,7 +181,7 @@ def generate_parameter_int(
                 and not (number + token_str).isdigit()
             ):
                 logits[token] = float("-inf")
-        next_token = model.decode(model.next_token(logits))
+        next_token = model.decode([model.next_token(logits)])
         if next_token == "," or token_str == "}":
             break
         number += next_token
@@ -213,12 +213,12 @@ def generate_parameter_bool(
     while True:
         logits = model.get_logits(model.encode(context + output))
         for token, _ in enumerate(logits):
-            token_str = model.decode(token)
+            token_str = model.decode([token])
             if all(
                 not s.startswith(output + token_str) for s in ("true", "false")
             ):
                 logits[token] = float("-inf")
-        next_token = model.decode(model.next_token(logits))
+        next_token = model.decode([model.next_token(logits)])
         if "true" in (output + next_token).lower():
             result = True
             break
@@ -265,10 +265,10 @@ def generate_function_parameters(
                 )
                 context += f"{function_call.parameters[parameter]},"
             case "integer":
-                function_call.parameters[parameter] = generate_parameter_int(
+                generate_parameter_int(
                     model, context, live, function_call, parameter
                 )
             case "boolean":
-                function_call.parameters[parameter] = generate_parameter_bool(
+                generate_parameter_bool(
                     model, context, live, function_call, parameter
                 )

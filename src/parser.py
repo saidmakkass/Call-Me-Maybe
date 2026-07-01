@@ -3,15 +3,17 @@ from keyword import iskeyword
 from argparse import ArgumentParser
 from pathlib import Path
 from pydantic import ValidationError
+from typing import Dict, Any, List, Tuple
 from .models import Prompt, FunctionRegistry
 from .ui import print_error
 
 
-def _get_args():
+def _get_args() -> Dict[str, Any]:
     """Parse and return command-line arguments.
 
     Returns:
-        Dictionary containing parsed arguments (functions_definition, input, output, model, debug).
+        Dictionary containing parsed arguments:
+            (functions_definition, input, output, model, debug).
     """
     parser = ArgumentParser(
         prog="uv run python -m src",
@@ -49,7 +51,7 @@ def _get_args():
     return parser.parse_args().__dict__
 
 
-def _load_json(path: str):
+def _load_json(path: str) -> Any:
     """Load and parse a JSON file.
 
     Args:
@@ -70,7 +72,7 @@ def _load_json(path: str):
         )
 
 
-def _load_function_registry(path: str):
+def _load_function_registry(path: str) -> FunctionRegistry:
     """Load and validate a function registry from JSON file.
 
     Args:
@@ -99,7 +101,7 @@ def _load_function_registry(path: str):
     return function_registry
 
 
-def _load_prompts(path: str):
+def _load_prompts(path: str) -> List[Prompt]:
     """Load and validate prompts from JSON file.
 
     Args:
@@ -126,7 +128,7 @@ def _load_prompts(path: str):
     return prompts
 
 
-def parse():
+def parse() -> Tuple[FunctionRegistry, List[Prompt], Path, str, bool]:
     """Parse configuration from arguments and load all required data.
 
     Loads function definitions, prompts, and model configuration from files
@@ -142,38 +144,44 @@ def parse():
         )
         if not function_registry.names:
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - No functions provided"
+                f"Invalid config file: '{args['input']}' "
+                "- No functions provided"
             )
         if any(not f.name for f in function_registry.functions):
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - Functions can't have empty names"
+                f"Invalid config file: '{args['input']}' "
+                "- Functions can't have empty names"
             )
         if any(
             not f.name.isidentifier() or iskeyword(f.name)
             for f in function_registry.functions
         ):
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - Function names must be valid python identifiers"
+                f"Invalid config file: '{args['input']}' "
+                "- Function names must be valid python identifiers"
             )
         if len(set(function_registry.names)) != len(function_registry.names):
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - Duplicated function names"
+                f"Invalid config file: '{args['input']}' "
+                "- Duplicated function names"
             )
         prompts = _load_prompts(args["input"])
         if any(not p.prompt for p in prompts):
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - Prompt cant be an empty string"
+                f"Invalid config file: '{args['input']}' "
+                "- Prompt cant be an empty string"
             )
         if not prompts:
             raise ValueError(
-                f"Invalid config file: '{args['input']}' - No prompts provided"
+                f"Invalid config file: '{args['input']}' "
+                "- No prompts provided"
             )
         output_path = Path(args["output"])
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w") as f:
+        with output_path.open("w"):
             ...
-        model = args["model"]
-        debug = args["debug"]
+        model: str = args["model"]
+        debug: bool = args["debug"]
     except FileNotFoundError as e:
         print_error(f"Missing input file: '{e.filename}'")
     except NotADirectoryError as e:

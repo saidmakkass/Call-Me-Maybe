@@ -3,8 +3,10 @@
 Provides rich console output for displaying function registries, prompts,
 live function call generation, execution summaries, and error messages.
 """
-from time import perf_counter, sleep
+
+from time import perf_counter
 import json
+from typing import Tuple
 
 from rich.console import Group, Console
 from rich.panel import Panel
@@ -57,6 +59,7 @@ def log(message: str) -> None:
         message: Debug message to log.
     """
     console.log(message, _stack_offset=2)
+
 
 def no_log(message: str) -> None:
     """No-op log function for disabling debug output.
@@ -152,17 +155,18 @@ def print_prompts(prompts: list[str]) -> None:
     )
 
 
-def print_spacer(
-    start_time: float | None = None, title: str | None = None
-) -> None:
+def print_spacer(start_time: float | None = None) -> None:
     """Print a visual separator line with optional elapsed time or title.
 
     Args:
-        start_time: Optional start time to calculate and display elapsed duration.
+        start_time: Optional start time to display elapsed duration.
         title: Optional title to display in the separator.
     """
     if start_time is None:
-        rule = Rule(title, style=ACCENT)
+        rule = Rule(
+            align="right",
+            style=ACCENT,
+        )
     else:
         elapsed = perf_counter() - start_time
         rule = Rule(
@@ -178,7 +182,7 @@ def print_spacer(
 
 def print_function_call(
     i: int, n: int, prompt: str, function_call: FunctionCall
-) -> Live:
+) -> Tuple[Live, Status]:
     """Display a prompt and start live updating of the function call output.
 
     Args:
