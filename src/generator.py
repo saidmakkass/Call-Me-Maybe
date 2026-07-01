@@ -182,7 +182,7 @@ def generate_parameter_int(
             ):
                 logits[token] = float("-inf")
         next_token = model.decode([model.next_token(logits)])
-        if next_token == "," or token_str == "}":
+        if next_token == "," or next_token == "}":
             break
         number += next_token
         function_call.parameters[param] = int(number)
